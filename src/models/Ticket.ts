@@ -8,6 +8,7 @@ export interface ITicket extends Document {
   project: mongoose.Types.ObjectId;
   creator: mongoose.Types.ObjectId;
   assignee?: mongoose.Types.ObjectId;
+  screenshot?: { data: Buffer, contentType: String };
 }
 
 const TicketSchema: Schema = new Schema({
@@ -17,7 +18,8 @@ const TicketSchema: Schema = new Schema({
   priority: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'medium' },
   project: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
   creator: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  assignee: { type: Schema.Types.ObjectId, ref: 'User' }
+  assignee: { type: Schema.Types.ObjectId, ref: 'User' },
+  screenshot: { data: Buffer, contentType: String }
 }, { timestamps: true });
 
 export default mongoose.model<ITicket>('Ticket', TicketSchema);

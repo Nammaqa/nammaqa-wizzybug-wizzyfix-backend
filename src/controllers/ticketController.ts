@@ -16,7 +16,7 @@ export const getTickets = async (req: AuthRequest, res: Response): Promise<void>
 
 export const createTicket = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { title, description, priority, project, assignee } = req.body;
+    const { title, description, priority, project, assignee, screenshotBase64, screenshotMimeType } = req.body;
 
     // Mock project and user for frontend integration testing
     let projectId = project;
@@ -29,16 +29,39 @@ export const createTicket = async (req: AuthRequest, res: Response): Promise<voi
       if (defaultProject) projectId = projectId || defaultProject._id;
     }
 
+    let screenshot;
+    if (screenshotBase64 && screenshotMimeType) {
+      screenshot = {
+        data: Buffer.from(screenshotBase64, 'base64'),
+        contentType: screenshotMimeType
+      };
+    }
+
     const ticket = await Ticket.create({
       title,
       description,
       priority: priority ? priority.toLowerCase() : 'medium',
       project: projectId,
       assignee,
-      creator: creatorId
+      creator: creatorId,
+      screenshot
     });
 
     res.status(201).json(ticket);
+  } catch (error) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+export const getTicketScreenshot = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket || !ticket.screenshot || !ticket.screenshot.data) {
+      res.status(404).send('Not found');
+      return;
+    }
+    res.set('Content-Type', ticket.screenshot.contentType as string);
+    res.send(ticket.screenshot.data);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
   }
